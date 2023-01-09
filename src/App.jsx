@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import './App.scss'
 import Graph from './components/Graph'
 import Table from './components/Table'
-import { characterGetAll, getLocation, episodeGetAll, getCharactersfromList } from './api/api'
+import { characterGetAll, locationGetAll, getLocation, episodeGetAll, getCharactersFromList } from './api/api'
 
 function App() {
   let characters = []
   let episodes = []
+  let locations = []
   let earthCharacters = []
   let earthAppearances = {}
+  let lastSeenOnEarth = []
+  let residentsIds = []
   let earthVal = "Earth (C-137)"
   const graphCaracters = ["Abradolf Lincler", "Arcade Alien", "Morty Smith", "Birdperson", "Mr. Meeseeks"]
 
@@ -17,13 +20,23 @@ function App() {
   useEffect(() => {
     async function fechData() {
       try {
-        data = await Promise.all([characterGetAll(), episodeGetAll()])
-        characters = data[0]
-        episodes = data[1]
-
-        const fromEarth = characters.filter(character => character?.origin?.name === earthVal)
-
-        const earthAppearances = fromEarth.reduce((acc, char) => {
+        data = await Promise.all([episodeGetAll(), locationGetAll()])
+        // characters = data[0]
+        episodes = data[0]
+        locations = data[1]
+        // console.log('locations', locations)
+        // console.log('episodes', episodes)
+        // console.log('characters', characters)
+        let earthLocation = locations.find(location => location.name === earthVal)
+        // console.log('earthLocation', earthLocation.residents)
+        residentsIds = earthLocation.residents.map(resident => {
+          return resident.substring(resident.lastIndexOf('/') + 1, resident.length).toString()
+        })
+        characters = await getCharactersFromList(residentsIds)
+        // console.log('residentsIds', residentsIds)
+        // const fromEarth = characters.filter(character => character?.origin?.name === earthVal)
+        // console.log('fromEarth', fromEarth)
+        const earthAppearances = characters.reduce((acc, char) => {
           const {
             name,
             status,
@@ -44,7 +57,7 @@ function App() {
           }
           return acc
         }, {})
-
+        // console.log('initEarthAppearances', initEarthAppearances)
         const calcedEarthAppearances = episodes.reduce((acc, episode) => {
           episode.characters.forEach(character => {
             const characterId = character.substring(character.lastIndexOf('/') + 1, character.length).toString()
@@ -54,7 +67,7 @@ function App() {
           })
           return acc
         }, earthAppearances)
-
+        // console.log(calcedEarthAppearances)
         let minAppearancesList = []
         for (let id in calcedEarthAppearances) {
           minAppearancesList.push({ [id]: calcedEarthAppearances[id] })
@@ -63,7 +76,9 @@ function App() {
         const minAppearances = Object.values(minAppearancesList[0])[0].appearances
         const allMinAppearances = minAppearancesList.filter(item => Object.values(item)[0].appearances === minAppearances)
         allMinAppearances.sort((a, b) => Object.values(a)[0].name > Object.values(b)[0].name ? 1 : -1)
-
+        // console.log('minAppearancesList', minAppearancesList)
+        // console.log('allMinAppearances', allMinAppearances)
+        // console.log(allMinAppearances[0])
         getLocation(Object.keys(allMinAppearances[0])[0])
           .then(data => {
             const card = Object.values(allMinAppearances[0])[0]

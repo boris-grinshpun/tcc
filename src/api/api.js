@@ -16,7 +16,7 @@ export function episodeGetAll() {
     return fetchAll(EPISODE_API_URL)
 }
 
-export function getCharactersfromList(list = null){
+export function getCharactersFromList(list = null){
     return fetch(`${CHARACTER_API_URL}/${list.join(",")}`).then(data=>data.json())
 }
 
