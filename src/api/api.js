@@ -1,10 +1,10 @@
-const CHARACHTER_API_URL = 'https://rickandmortyapi.com/api/character'
+const CHARACTER_API_URL = 'https://rickandmortyapi.com/api/character'
 const LOCATION_API_URL = 'https://rickandmortyapi.com/api/location'
 const EPISODE_API_URL = 'https://rickandmortyapi.com/api/episode'
 const apiResultsPerPage = 20
 
-export function charachterGetAll() {
-    return fetchAll(CHARACHTER_API_URL)
+export function characterGetAll() {
+    return fetchAll(CHARACTER_API_URL)
 }
 export function locationGetAll(params = []) {
     return fetchAll(LOCATION_API_URL)
@@ -29,7 +29,7 @@ function fetchAll(url) {
             return Promise.all([fetchByIds, lastPage])
                 .then(responses => {
                     return Promise.all(responses.map(res => res.json()))
-                        .then(data => [firstPage.results, ...data[0], data[1]])
+                        .then(data => [...firstPage.results, ...data[0], ...data[1].results])
                 })
         })
 
