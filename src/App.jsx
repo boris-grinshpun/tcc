@@ -1,33 +1,50 @@
 import { useState, useEffect } from 'react'
 import './App.scss'
-import Layout from './features/Layout'
-import { characterGetAll, locationGetAll, episodeGetAll } from './api/api'
+import Graph from './components/Graph'
+import Table from './components/Table'
+import { characterGetAll, getLocation, episodeGetAll, getCharactersfromList } from './api/api'
 
 function App() {
   let characters = []
   let episodes = []
   let earthCharacters = []
   let earthAppearances = {}
-  let locations = []
   let earthVal = "Earth (C-137)"
+  const graphCaracters = ["Abradolf Lincler", "Arcade Alien", "Morty Smith", "Birdperson", "Mr. Meeseeks"]
+
   let data = []
+  const [characterCard, setCharacterCard] = useState({})
   useEffect(() => {
     async function fechData() {
       try {
         data = await Promise.all([characterGetAll(), episodeGetAll()])
         characters = data[0]
         episodes = data[1]
-        // console.log('episodes', episodes)
+
         const fromEarth = characters.filter(character => character?.origin?.name === earthVal)
-        // console.log('fromEarth', fromEarth)
-        const initEarthAppearances = fromEarth.reduce((acc, char) => {
-          acc[char.id.toString()] = {appearances: 0, name: char.name}
+
+        const earthAppearances = fromEarth.reduce((acc, char) => {
+          const {
+            name,
+            status,
+            species,
+            gender,
+            image,
+            location: { name: characterLocation }
+          } = char
+          acc[char.id.toString()] = {
+            appearances: 0,
+            name,
+            characterLocation,
+            dimention: null,
+            status,
+            species,
+            gender,
+            image
+          }
           return acc
         }, {})
-        // console.log('initEarthAppearances', initEarthAppearances)
-        earthAppearances = initEarthAppearances
-        earthCharacters = fromEarth
-        // console.log('earthCharacters', earthCharacters)
+
         const calcedEarthAppearances = episodes.reduce((acc, episode) => {
           episode.characters.forEach(character => {
             const characterId = character.substring(character.lastIndexOf('/') + 1, character.length).toString()
@@ -37,17 +54,22 @@ function App() {
           })
           return acc
         }, earthAppearances)
-        // console.log(calcedEarthAppearances)
+
         let minAppearancesList = []
         for (let id in calcedEarthAppearances) {
-          minAppearancesList.push({ [id]: calcedEarthAppearances[id], name: calcedEarthAppearances[id].name })
+          minAppearancesList.push({ [id]: calcedEarthAppearances[id] })
         }
         minAppearancesList.sort((a, b) => Object.values(a)[0].appearances > Object.values(b)[0].appearances ? 1 : -1)
         const minAppearances = Object.values(minAppearancesList[0])[0].appearances
-        const allMinAppearances = minAppearancesList.filter(item=>Object.values(item)[0].appearances === minAppearances)
-        allMinAppearances.sort((a, b)=> Object.values(a)[0].name > Object.values(b)[0].name ? 1 : -1)
-        // console.log('minAppearancesList', minAppearancesList)
-        // console.log('allMinAppearances', allMinAppearances)
+        const allMinAppearances = minAppearancesList.filter(item => Object.values(item)[0].appearances === minAppearances)
+        allMinAppearances.sort((a, b) => Object.values(a)[0].name > Object.values(b)[0].name ? 1 : -1)
+
+        getLocation(Object.keys(allMinAppearances[0])[0])
+          .then(data => {
+            const card = Object.values(allMinAppearances[0])[0]
+            card.dimension = data.dimension
+            setCharacterCard(Object.values(allMinAppearances[0])[0])
+          })
       } catch (err) {
         // console.log(err)
       }
@@ -56,7 +78,8 @@ function App() {
   }, [])
   return (
     <div className="App">
-      <Layout />
+      <div><Table card={characterCard} /></div>
+      <div><Graph /></div>
 
     </div>
   )
