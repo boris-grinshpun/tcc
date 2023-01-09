@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.scss'
 import Graph from './components/Graph'
 import Table from './components/Table'
-import { characterGetAll, locationGetAll, getLocation, episodeGetAll, getCharactersFromList } from './api/api'
+import { characterGetAll, locationGetAll, getLocation, episodeGetAll, getCharactersFromIds } from './api/api'
 
 function App() {
   let characters = []
@@ -18,21 +18,21 @@ function App() {
   let data = []
   const [characterCard, setCharacterCard] = useState({})
   useEffect(() => {
-    async function fechData() {
+    async function fechDataPartOne() {
       try {
-        data = await Promise.all([episodeGetAll(), locationGetAll()])
-        // characters = data[0]
+        data = await Promise.all([episodeGetAll(), locationGetAll(), characterGetAll()])
         episodes = data[0]
         locations = data[1]
+        characters = data[2]
         // console.log('locations', locations)
-        // console.log('episodes', episodes)
-        // console.log('characters', characters)
+        console.log('episodes', episodes)
+        console.log('characters', characters)
         let earthLocation = locations.find(location => location.name === earthVal)
         // console.log('earthLocation', earthLocation.residents)
         residentsIds = earthLocation.residents.map(resident => {
           return resident.substring(resident.lastIndexOf('/') + 1, resident.length).toString()
         })
-        characters = await getCharactersFromList(residentsIds)
+        characters = await getCharactersFromIds(residentsIds)
         // console.log('residentsIds', residentsIds)
         // const fromEarth = characters.filter(character => character?.origin?.name === earthVal)
         // console.log('fromEarth', fromEarth)
@@ -79,17 +79,22 @@ function App() {
         // console.log('minAppearancesList', minAppearancesList)
         // console.log('allMinAppearances', allMinAppearances)
         // console.log(allMinAppearances[0])
-        getLocation(Object.keys(allMinAppearances[0])[0])
+        let [characterId, characterCard] = Object.entries(allMinAppearances[0])[0]
+        getLocation(characterId)
           .then(data => {
-            const card = Object.values(allMinAppearances[0])[0]
-            card.dimension = data.dimension
-            setCharacterCard(Object.values(allMinAppearances[0])[0])
+            characterCard.dimension = data.dimension
+            setCharacterCard(characterCard)
           })
       } catch (err) {
         // console.log(err)
       }
     }
-    fechData()
+    async function fetchDataPartTwo(){
+      // graphCaracters.
+    }
+
+    fechDataPartOne()
+    fetchDataPartTwo()
   }, [])
   return (
     <div className="App">

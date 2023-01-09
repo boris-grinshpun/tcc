@@ -9,14 +9,15 @@ export function characterGetAll() {
 export function locationGetAll() {
     return fetchAll(LOCATION_API_URL)
 }
-export function getLocation(id) {
-    return fetch(`${LOCATION_API_URL}/${id}`).then(data=> data.json())
-}
 export function episodeGetAll() {
     return fetchAll(EPISODE_API_URL)
 }
 
-export function getCharactersFromList(list = null){
+export function getLocation(id) {
+    return fetch(`${LOCATION_API_URL}/${id}`).then(data=> data.json())
+}
+
+export function getCharactersFromIds(list = null){
     return fetch(`${CHARACTER_API_URL}/${list.join(",")}`).then(data=>data.json())
 }
 
