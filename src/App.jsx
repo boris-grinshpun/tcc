@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import './App.scss'
-import Graph from './components/Graph'
-import Table from './components/Table'
+import Graph from './components/graph/Graph'
+import Table from './components/table/Table'
 import { characterGetAll, locationGetAll, getLocation, episodeGetAll, getCharactersFromIds } from './api/api'
+import {calcCharAppearanceInEpisodes, sortByKey} from './helpers/helper'
 
 function App() {
   let allCharacters = []
@@ -26,26 +27,19 @@ function App() {
         allLocations = data[1]
         allCharacters = data[2]
         prepTableData()
-        prepGraphdata()
-      } catch {
-
+        prepGraphData()
+      } catch (err) {
+        console.log(err)
       }
     }
     async function prepTableData() {
       try {
-        // console.log('allLocations', allLocations)
-        // console.log('allEpisodes', allEpisodes)
-        // console.log('characters', allCharacters)
         let earthLocation = allLocations.find(location => location.name === earthVal)
-        // console.log('earthLocation', earthLocation.residents)
         residentsIds = earthLocation.residents.map(resident => {
           return resident.substring(resident.lastIndexOf('/') + 1, resident.length).toString()
         })
         // TODO remove await
         earthCharacters = await getCharactersFromIds(residentsIds)
-        // console.log('residentsIds', residentsIds)
-        // const fromEarth = allCharacters.filter(character => character?.origin?.name === earthVal)
-        // console.log('fromEarth', fromEarth)
         charAppearanceInEpisodes = earthCharacters.reduce((acc, character) => {
           const {
             name,
@@ -67,24 +61,17 @@ function App() {
           }
           return acc
         }, {})
-        // console.log("charAppearanceInEpisodes", charAppearanceInEpisodes)
-        charAppearanceInEpisodes = calcCharAppearanceInEpisodes(charAppearanceInEpisodes)
+        charAppearanceInEpisodes = calcCharAppearanceInEpisodes(charAppearanceInEpisodes, allEpisodes)
 
-    
-
-        // console.log(charAppearanceInEpisodes)
         let minAppearancesList = []
         for (let id in charAppearanceInEpisodes) {
           minAppearancesList.push({ [id]: charAppearanceInEpisodes[id] })
         }
 
-        minAppearancesList.sort((a, b) => Object.values(a)[0].appearances > Object.values(b)[0].appearances ? 1 : -1)
+        minAppearancesList.sort(sortByKey('appearances'))
         const minAppearances = Object.values(minAppearancesList[0])[0].appearances
         const allMinAppearances = minAppearancesList.filter(item => Object.values(item)[0].appearances === minAppearances)
-        allMinAppearances.sort((a, b) => Object.values(a)[0].name > Object.values(b)[0].name ? 1 : -1)
-        // console.log('minAppearancesList', minAppearancesList)
-        // console.log('allMinAppearances', allMinAppearances)
-        // console.log(allMinAppearances[0])
+        allMinAppearances.sort(sortByKey('name'))
         let [characterId, characterCard] = Object.entries(allMinAppearances[0])[0]
         getLocation(characterId)
           .then(data => {
@@ -92,10 +79,9 @@ function App() {
             setCharacterCard(characterCard)
           })
       } catch (err) {
-        // console.log(err)
       }
     }
-    async function prepGraphdata() {
+    async function prepGraphData() {
       graphCharacters = allCharacters.reduce((acc, character) => {
         let characterName = character.name
         if (graphCaracters.includes(characterName)) {
@@ -113,9 +99,7 @@ function App() {
         }, {})
         return { ...acc, ...appearanceById }
       }, [])
-      characterAppearance = calcCharAppearanceInEpisodes(characterAppearance)
-      // console.log(characterAppearance)
-      // console.log(graphCharacters)
+      characterAppearance = calcCharAppearanceInEpisodes(characterAppearance, allEpisodes)
       const prepGraphData = []
       for (const [name, {ids}] of Object.entries(graphCharacters)){
         const totalAppearances = ids.reduce((acc, id)=>{
@@ -126,19 +110,8 @@ function App() {
         prepGraphData.push({name, totalAppearances})
       }
       setGraphData(prepGraphData)
-      // console.log(graphData )
     }
-    function calcCharAppearanceInEpisodes(charAppearanceInEpisodes) {
-      return charAppearanceInEpisodes = allEpisodes.reduce((acc, episode) => {
-        episode.characters.forEach(character => {
-          const characterId = character.substring(character.lastIndexOf('/') + 1, character.length).toString()
-          if (charAppearanceInEpisodes.hasOwnProperty(characterId)) {
-            charAppearanceInEpisodes[characterId].appearances++
-          }
-        })
-        return acc
-      }, charAppearanceInEpisodes)
-    }
+
     start()
   }, [])
   return (
