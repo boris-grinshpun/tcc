@@ -144,6 +144,7 @@ function App() {
   return (
     <div className="App">
       <div><Table card={characterCard} /></div>
+      <br />
       <div><Graph data={graphData} /></div>
     </div>
   )
