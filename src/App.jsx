@@ -49,7 +49,7 @@ function App() {
             appearances: 0,
             name,
             characterLocation,
-            dimention: null,
+            dimension: null,
             status,
             species,
             gender,
@@ -58,24 +58,21 @@ function App() {
           return acc
         }, {})
         charAppearanceInEpisodes = calcCharAppearanceInEpisodes(charAppearanceInEpisodes, allEpisodes)
-
         let minAppearancesList = []
         for (let id in charAppearanceInEpisodes) {
           minAppearancesList.push({ [id]: charAppearanceInEpisodes[id] })
         }
-
         minAppearancesList.sort(sortByKey('appearances'))
         const minAppearances = Object.values(minAppearancesList[0])[0].appearances
         const allMinAppearances = minAppearancesList.filter(item => Object.values(item)[0].appearances === minAppearances)
         allMinAppearances.sort(sortByKey('name'))
-        let [characterId, characterCard] = Object.entries(allMinAppearances[0])[0]
+        let [characterId, characterCardInit] = Object.entries(allMinAppearances[0])[0]
         getLocation(characterId)
           .then(data => {
-            characterCard.dimension = data.dimension
-            setCharacterCard(characterCard)
+            characterCardInit.dimension = data.dimension
+            setCharacterCard(characterCardInit)
           })
       } catch (err) {
-        console.log(err)
       }
     }
     async function prepGraphData() {
