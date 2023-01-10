@@ -3,22 +3,20 @@ import './App.scss'
 import Graph from './components/graph/Graph'
 import Table from './components/table/Table'
 import { characterGetAll, locationGetAll, getLocation, episodeGetAll, getCharactersFromIds } from './api/api'
-import {calcCharAppearanceInEpisodes, sortByKey} from './helpers/helper'
+import {calcCharAppearanceInEpisodes, sortByKey, earthVal, graphCharacters} from './helpers/helper'
 
 function App() {
-  let allCharacters = []
-  let allEpisodes = []
-  let allLocations = []
-  let earthCharacters = []
-  let charAppearanceInEpisodes = {}
-  let residentsIds = []
-  let graphCharacters = []
-  let earthVal = "Earth (C-137)"
-  const graphCaracters = ["Abradolf Lincler", "Arcade Alien", "Morty Smith", "Birdperson", "Mr. Meeseeks"]
+  let allCharacters,
+      allEpisodes,
+      allLocations,
+      earthCharacters,
+      charAppearanceInEpisodes,
+      residentsIds,
+      data
 
-  let data = []
   const [characterCard, setCharacterCard] = useState({})
   const [graphData, setGraphData] = useState([])
+
   useEffect(() => {
     async function start() {
       try {
@@ -29,7 +27,6 @@ function App() {
         prepTableData()
         prepGraphData()
       } catch (err) {
-        console.log(err)
       }
     }
     async function prepTableData() {
@@ -38,7 +35,6 @@ function App() {
         residentsIds = earthLocation.residents.map(resident => {
           return resident.substring(resident.lastIndexOf('/') + 1, resident.length).toString()
         })
-        // TODO remove await
         earthCharacters = await getCharactersFromIds(residentsIds)
         charAppearanceInEpisodes = earthCharacters.reduce((acc, character) => {
           const {
@@ -79,12 +75,13 @@ function App() {
             setCharacterCard(characterCard)
           })
       } catch (err) {
+        console.log(err)
       }
     }
     async function prepGraphData() {
-      graphCharacters = allCharacters.reduce((acc, character) => {
+      let graphCharactersData = allCharacters.reduce((acc, character) => {
         let characterName = character.name
-        if (graphCaracters.includes(characterName)) {
+        if (graphCharacters.includes(characterName)) {
           if (!acc[characterName]) {
             acc[characterName] = { ids: [] }
           }
@@ -92,7 +89,7 @@ function App() {
         }
         return acc
       }, {})
-      let characterAppearance = Object.values(graphCharacters).reduce((acc, character) => {
+      let characterAppearance = Object.values(graphCharactersData).reduce((acc, character) => {
         let appearanceById = character.ids.reduce((acc, id) => {
           acc[id.toString()] = { appearances: 0 }
           return acc
@@ -101,7 +98,7 @@ function App() {
       }, [])
       characterAppearance = calcCharAppearanceInEpisodes(characterAppearance, allEpisodes)
       const prepGraphData = []
-      for (const [name, {ids}] of Object.entries(graphCharacters)){
+      for (const [name, {ids}] of Object.entries(graphCharactersData)){
         const totalAppearances = ids.reduce((acc, id)=>{
           
           acc += characterAppearance[id.toString()].appearances

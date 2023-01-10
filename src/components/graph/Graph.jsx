@@ -18,7 +18,7 @@ export default function Graph({ data }) {
         )
     })
 
-    const graphColumns = data ? data.map((row, index) => {
+    const graphColumns = data.map((row, index) => {
         const columnHeight = Math.floor((row.totalAppearances * graphHeight) / maxValue)
         return (
             <div className='x-legend-wrapper' key={index + row.name}>
@@ -27,7 +27,7 @@ export default function Graph({ data }) {
                 <div className="x-legend-item">{row.name}</div>
             </div>
         )
-    }) : []
+    })
     return (
         <div className="wrapper" >
             <div className="title">Populatiry Graph</div>
